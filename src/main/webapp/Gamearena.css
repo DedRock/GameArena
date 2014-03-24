@@ -1,0 +1,81 @@
+body {
+    background-color: lightgrey;
+    color: black;
+    font-family: Arial, sans-serif;
+    font-size: small;
+    margin: 8px;
+}
+
+h1{
+    color: orange;
+    text-align: center;
+    background-color: darkgrey;
+    -webkit-text-stroke: medium black;
+}
+
+#usersOnline{
+    background-color: deepskyblue;
+}
+.defaultTextBoxHighLight{
+    background-color: white;
+}
+
+.errorHighLight{
+    background-color: pink;
+}
+
+.errorMessage{
+    /*background : lightgreen;*/
+    color: red;
+    /*background-color: cornflowerblue;*/
+    font-weight: bold;
+}
+
+.boldText{
+    font-weight: bolder;
+}
+
+.userLabel{
+    font-weight: bolder;
+}
+.userLabel:hover{
+    font-weight: bolder;
+    color: red;
+    text-decoration:underline
+}
+
+.freeXOCell{
+    background-color: lightgreen;
+}
+
+.ocupyXOCell{
+    background-color: darkgrey;
+    font-weight: bold;
+    font-size: 15;
+    color: grey;
+}
+
+.winXOCell{
+    background-color: orange;
+    font-weight: bold;
+    border-width: 2;
+    border-color: black;
+}
+
+.openGamesBtnView{
+    border-radius: 10;
+    background: lightskyblue;
+    border-color: black;
+    border-width: 3;
+
+}
+.openGamesBtnView:hover{
+    background: cornflowerblue;
+}
+
+.gwt-button{
+    border-radius: 7;
+    background: burlywood;
+    border-color: black;
+    border-width: 3;
+}
