@@ -5,6 +5,32 @@
 <web-app>
   <display-name>Game Arena</display-name>
 
+    <servlet>
+        <servlet-name>Gamearena getUsersOnlineService</servlet-name>
+        <servlet-class>server.services.getUsersOnlineServiceImpl</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Gamearena AuthoriяationService</servlet-name>
+        <servlet-class>server.services.authorization.AuthorizationServiceImpl</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Gamearena GameService</servlet-name>
+        <servlet-class>server.services.game.GameServiceImpl</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Gamearena getUsersOnlineService</servlet-name>
+        <url-pattern>/Gamearena/getUsersOnlineService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Gamearena AuthoriяationService</servlet-name>
+        <url-pattern>/Gamearena/AuthoriяationService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Gamearena GameService</servlet-name>
+        <url-pattern>/Gamearena/GameService</url-pattern>
+    </servlet-mapping>
+
     <welcome-file-list>
       <welcome-file>gamearena.html</welcome-file>
    </welcome-file-list>

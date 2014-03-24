@@ -5,5 +5,8 @@
     <inherits name='com.google.gwt.user.User'/>
 
     <entry-point class='client.Gamearena'/>
+    <servlet path="/getUsersOnlineService" class="server.services.getUsersOnlineServiceImpl"/>
+    <servlet path="/AuthoriяationService" class="server.services.authorization.AuthorizationServiceImpl"/>
+    <servlet path="/GameService" class="server.services.game.GameServiceImpl"/>
 
 </module>
