@@ -6,28 +6,28 @@
   <display-name>Game Arena</display-name>
 
     <servlet>
-        <servlet-name>Gamearena getUsersOnlineService</servlet-name>
+        <servlet-name>getUsersOnlineService</servlet-name>
         <servlet-class>server.services.getUsersOnlineServiceImpl</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>Gamearena AuthoriяationService</servlet-name>
+        <servlet-name>AuthorizationService</servlet-name>
         <servlet-class>server.services.authorization.AuthorizationServiceImpl</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>Gamearena GameService</servlet-name>
+        <servlet-name>GameService</servlet-name>
         <servlet-class>server.services.game.GameServiceImpl</servlet-class>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>Gamearena getUsersOnlineService</servlet-name>
+        <servlet-name>getUsersOnlineService</servlet-name>
         <url-pattern>/Gamearena/getUsersOnlineService</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>Gamearena AuthoriяationService</servlet-name>
-        <url-pattern>/Gamearena/AuthoriяationService</url-pattern>
+        <servlet-name>AuthorizationService</servlet-name>
+        <url-pattern>/Gamearena/AuthorizationService</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>Gamearena GameService</servlet-name>
+        <servlet-name>GameService</servlet-name>
         <url-pattern>/Gamearena/GameService</url-pattern>
     </servlet-mapping>
 
