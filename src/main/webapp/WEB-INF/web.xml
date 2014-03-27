@@ -17,6 +17,10 @@
         <servlet-name>GameService</servlet-name>
         <servlet-class>server.services.game.GameServiceImpl</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>Gamearena ChatService</servlet-name>
+        <servlet-class>server.services.chat.ChatServiceImpl</servlet-class>
+    </servlet>
 
     <servlet-mapping>
         <servlet-name>getUsersOnlineService</servlet-name>
@@ -29,6 +33,10 @@
     <servlet-mapping>
         <servlet-name>GameService</servlet-name>
         <url-pattern>/Gamearena/GameService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Gamearena ChatService</servlet-name>
+        <url-pattern>/Gamearena/ChatService</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>

@@ -1,4 +1,4 @@
-package client;
+package client.services.chat;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -7,22 +7,20 @@ import com.google.gwt.core.client.GWT;
 /**
  * Created with IntelliJ IDEA.
  * User: Afrikanov
- * Date: 26.03.14
- * Time: 19:30
+ * Date: 27.03.14
+ * Time: 17:17
  * To change this template use File | Settings | File Templates.
  */
-@RemoteServiceRelativePath("Service")
-public interface Service extends RemoteService {
-
-    void test();
+@RemoteServiceRelativePath("ChatService")
+public interface ChatService extends RemoteService {
     /**
      * Utility/Convenience class.
-     * Use Service.App.getInstance() to access static instance of ServiceAsync
+     * Use ChatService.App.getInstance() to access static instance of ChatServiceAsync
      */
     public static class App {
-        private static final ServiceAsync ourInstance = (ServiceAsync) GWT.create(Service.class);
+        private static final ChatServiceAsync ourInstance = (ChatServiceAsync) GWT.create(ChatService.class);
 
-        public static ServiceAsync getInstance() {
+        public static ChatServiceAsync getInstance() {
             return ourInstance;
         }
     }

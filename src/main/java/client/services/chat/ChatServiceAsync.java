@@ -1,14 +1,13 @@
-package client;
+package client.services.chat;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * Created with IntelliJ IDEA.
  * User: Afrikanov
- * Date: 26.03.14
- * Time: 19:30
+ * Date: 27.03.14
+ * Time: 17:17
  * To change this template use File | Settings | File Templates.
  */
-public interface ServiceAsync {
-    void test(AsyncCallback<Void> async);
+public interface ChatServiceAsync {
 }
