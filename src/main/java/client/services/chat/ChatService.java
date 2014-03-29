@@ -13,10 +13,34 @@ import com.google.gwt.core.client.GWT;
  */
 @RemoteServiceRelativePath("ChatService")
 public interface ChatService extends RemoteService {
+
     /**
-     * Utility/Convenience class.
-     * Use ChatService.App.getInstance() to access static instance of ChatServiceAsync
+     * Function to send new message to players' chat
+     * @param myAccount
+     * @param message
      */
+    void sendNewMesage(String myAccount, String message);
+
+    /**
+     * Function to receive new messages from server
+     * @param lastMsgIndex - ID последнего  считанного сообщения
+     * @return String = JSON-object with array of messages
+     * Struct of JSON-answer:
+     *  {
+     *      "messages":
+     *      [
+     *          {"sender" : :"<></>"}
+     *      ]
+     *
+     */
+    String getNewMassages(Long lastMsgIndex);
+
+    /**
+     * Function to receive new messages from server
+     *
+     * @return String = JSON-object with array of messages
+     */
+
     public static class App {
         private static final ChatServiceAsync ourInstance = (ChatServiceAsync) GWT.create(ChatService.class);
 

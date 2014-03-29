@@ -9,6 +9,8 @@ import client.gui.OpenGameButton;
 import client.person.Person;
 import client.services.authorization.AuthorizationService;
 import client.services.authorization.AuthorizationServiceAsync;
+import client.services.chat.ChatService;
+import client.services.chat.ChatServiceAsync;
 import client.services.game.GameService;
 import client.services.game.GameServiceAsync;
 import client.services.getUsersOnlineService;
@@ -16,13 +18,20 @@ import client.services.getUsersOnlineServiceAsync;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+
+import com.google.gwt.event.dom.client.KeyPressEvent;
+import com.google.gwt.event.dom.client.KeyPressHandler;
+import com.google.gwt.json.client.*;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 
+
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -36,10 +45,13 @@ public class Gamearena implements EntryPoint {
     //===== user info =============================
     Boolean isLogin = false;
 
-    Label usersOnlineLabel = new Label();
-    ArrayList<Person> usersOnline = new ArrayList<Person>();
 
-    private String myAccount = new String();
+    //Label usersOnlineLabel = new Label();
+    ArrayList<Person> usersOnline = new ArrayList<Person>();
+    Long lastReadChatMsgIndex = 0L;
+
+    String myAccount = new String();
+
 
 
     boolean gameCreated = false; // признак того, что игра создана
@@ -113,6 +125,23 @@ public class Gamearena implements EntryPoint {
     Label createNewGameLabel = new Label("You may create a new game:");
     Label joinToOpenGamesLabel = new Label("or join to one of open games :");
 
+    //===== Chat =============
+    VerticalPanel chatPanel = new VerticalPanel();
+    Button testChatBtn = new Button("Test");
+    Button sendChatMessageBtn = new Button("Send");
+    TextBox chatNewMassageText = new TextBox();
+    HorizontalPanel sendNewMessagePanel = new HorizontalPanel();
+    VerticalPanel chatMуssages = new VerticalPanel();
+    ScrollPanel chatMуssagesScroll = new CustomScrollPanel();
+    Timestamp lastReceivedMessage = new Timestamp(0);
+
+
+
+
+
+
+
+
 
     //############################################################################################################
     //##### INIT WIDGETS FUNCTIONS ###############################################################################
@@ -123,6 +152,7 @@ public class Gamearena implements EntryPoint {
         userVerticalPanel.clear();
         userVerticalPanel.setWidth("100%");
         userVerticalPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+        loginPassTextBox.addKeyPressHandler(loginPassTextBoxKeyPressHandler);
         userTable.clear();
         loginUserTextBox.setText("");
         loginPassTextBox.setText("");
@@ -298,8 +328,45 @@ public class Gamearena implements EntryPoint {
         RootPanel.get("userStatistic").clear();
     }
 
+
+    public void initChatWidget(){
+        chatPanel.setWidth("100%");
+        chatMуssagesScroll.setStyleName("chatPanel");
+        chatMуssagesScroll.setSize("100%", "200px");
+        chatMуssagesScroll.add(chatMуssages);
+        chatPanel.add(chatMуssagesScroll);
+        chatNewMassageText.setWidth("100%");
+        sendNewMessagePanel.setWidth("100%");
+        chatNewMassageText.addKeyPressHandler(msgTextBoxKeyPressHandler);
+        sendNewMessagePanel.add(chatNewMassageText);
+        sendChatMessageBtn.addClickHandler(sendChatMessageBtnClickHandler);
+        sendNewMessagePanel.add(sendChatMessageBtn);
+        chatPanel.add(sendNewMessagePanel);
+        RootPanel.get("chat").add(chatPanel);
+    }
+
+
     //############################################################################################################
-    //##### BUTTON'S CLICK HANDLERS ##########################################################################################
+    //##### KEY PRESS HANDLERS ###################################################################################
+    //############################################################################################################
+    KeyPressHandler msgTextBoxKeyPressHandler = new KeyPressHandler() {
+        @Override
+        public void onKeyPress(KeyPressEvent keyPressEvent) {
+            if (keyPressEvent.getCharCode() == 13)
+                sendChatMessageServiceCall();
+        }
+    };
+
+    KeyPressHandler loginPassTextBoxKeyPressHandler  = new KeyPressHandler() {
+        @Override
+        public void onKeyPress(KeyPressEvent keyPressEvent) {
+            if (keyPressEvent.getCharCode() == 13)
+                loginCheckServiceCall();
+        }
+    };
+
+    //############################################################################################################
+    //##### BUTTON'S CLICK HANDLERS ##############################################################################
     //############################################################################################################
 
     ClickHandler loginBtnClickHandler = new ClickHandler() {
@@ -446,6 +513,14 @@ public class Gamearena implements EntryPoint {
             hideUserStatsPanel();
         }
     };
+
+    ClickHandler sendChatMessageBtnClickHandler = new ClickHandler() {
+        @Override
+        public void onClick(ClickEvent clickEvent) {
+            sendChatMessageServiceCall();
+        }
+    };
+
     //############################################################################################################
     //##### ASYNC SERIVICES' CALLBACKS ##########################################################################################
     //############################################################################################################
@@ -703,12 +778,55 @@ public class Gamearena implements EntryPoint {
         }
     };
 
+    AsyncCallback<Void> sendChatMessageServiceCallback = new AsyncCallback<Void>() {
+        @Override
+        public void onFailure(Throwable throwable) {
+            Window.alert("sendChatMessageService ERROR.");
+            chatNewMassageText.setEnabled(true);
+            sendChatMessageBtn.setEnabled(true);
+        }
+        @Override
+        public void onSuccess(Void aVoid) {
+            chatNewMassageText.setEnabled(true);
+            chatNewMassageText.setText("");
+            sendChatMessageBtn.setEnabled(true);
+        }
+    };
+
+    AsyncCallback<String> updateChatServiceCallback = new AsyncCallback<String>() {
+        @Override
+        public void onFailure(Throwable throwable) {
+            Window.alert("updateChatService ERROR");
+        }
+
+        @Override
+        public void onSuccess(String s) {
+            if (lastReadChatMsgIndex == 0)
+                chatMуssages.add(new HTML("<p>Последние 5 сообщений:</p>"));
+
+            JSONObject serverAnswer = (JSONObject) JSONParser.parseStrict(s);
+            JSONArray messages = (JSONArray) serverAnswer.get("messages");
+            for(int i=0; i< messages.size(); i++){
+                JSONObject message = (JSONObject)messages.get(i);
+                JSONString id = (JSONString)message.get("id");
+                JSONString sender = (JSONString)message.get("sender");
+                JSONString text = (JSONString)message.get("text");
+                JSONString time = (JSONString)message.get("time");
+                chatMуssages.add(new HTML("<p>[" + time.stringValue() + "] <b>" + sender.stringValue() + "</b> : " + text.stringValue() + "</p>"));
+                chatMуssagesScroll.scrollToBottom();
+                lastReadChatMsgIndex = Long.parseLong(id.stringValue());
+            }
+        }
+    };
+
+
     //############################################################################################################
     //##### SERIVICES' CALLS ##########################################################################################
     //############################################################################################################
 
     GameServiceAsync gameService = GameService.App.getInstance();
     AuthorizationServiceAsync authorizationService = AuthorizationService.App.getInstance();
+    ChatServiceAsync chatService = ChatService.App.getInstance();
 
     void loginCheckServiceCall(){
         authorizationService.checkLogin(loginUserTextBox.getText(), loginPassTextBox.getText(), loginCheckServiceCallback);
@@ -750,6 +868,17 @@ public class Gamearena implements EntryPoint {
     void closeGameServiceCall(){
         gameService.closeGame(gameId, myAccount, closeGameServiceCallback);
     }
+
+    void sendChatMessageServiceCall(){
+        chatService.sendNewMesage(myAccount, chatNewMassageText.getText(), sendChatMessageServiceCallback );
+        chatNewMassageText.setEnabled(false);
+        sendChatMessageBtn.setEnabled(false);
+    }
+
+    void updateChatServiceCall(){
+        chatService.getNewMassages(lastReadChatMsgIndex, updateChatServiceCallback);
+    }
+
     //############################################################################################################
     //##### TIMERS ###############################################################################################
     //############################################################################################################
@@ -778,6 +907,13 @@ public class Gamearena implements EntryPoint {
         @Override
         public void run() {
             waitForOpponentServiceCall();
+        }
+    };
+
+    Timer chatUpdate = new Timer() {
+        @Override
+        public void run() {
+            updateChatServiceCall();
         }
     };
 
@@ -898,5 +1034,11 @@ public class Gamearena implements EntryPoint {
         updateUsersOnlineTimer.run();
         // Update users' info on page periodicaly
         updateUsersOnlineTimer.scheduleRepeating(5000); //  задача на обновлнение списка пользователей онлайн
+
+        //RootPanel.get("chat").add(testChatBtn);
+        initChatWidget();
+        chatUpdate.scheduleRepeating(1000);
+
+
     }
 }
