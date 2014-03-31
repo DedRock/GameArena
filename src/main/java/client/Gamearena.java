@@ -345,6 +345,16 @@ public class Gamearena implements EntryPoint {
         RootPanel.get("chat").add(chatPanel);
     }
 
+    void enableChat(){
+        chatNewMassageText.setEnabled(true);
+        sendChatMessageBtn.setEnabled(true);
+    }
+
+    void disableChat(){
+        chatNewMassageText.setEnabled(false);
+        sendChatMessageBtn.setEnabled(false);
+    }
+
 
     //############################################################################################################
     //##### KEY PRESS HANDLERS ###################################################################################
@@ -384,6 +394,7 @@ public class Gamearena implements EntryPoint {
             Cookies.removeCookie("user");
             showLoginPanel();
             hideGameLobby();
+            disableChat();
         }
     };
 
@@ -535,6 +546,7 @@ public class Gamearena implements EntryPoint {
                 Cookies.setCookie("user", myAccount);
                 showWelcomePanel();
                 showGameLobby();
+                enableChat();
             }
             else
                 errorLoginMessage.setText(result.getErrorDescription());
@@ -1014,6 +1026,8 @@ public class Gamearena implements EntryPoint {
 
         // Init
         initGameboardWidget();
+        initChatWidget();
+        chatUpdate.scheduleRepeating(1000);
 
         // Check registration by cookies
         if ( (myAccount = Cookies.getCookie("user")) != null)
@@ -1022,10 +1036,12 @@ public class Gamearena implements EntryPoint {
         // Show user-info panel in case of authorization
         if ( isLogin ){
             showWelcomePanel();
+            enableChat();
             showGameLobby(); // здесь найдём игры, которые мы отрыли и в которых мы участвуем
         }
         else{
             showLoginPanel();
+            disableChat();
         }
 
         // Add panel "Users online"
@@ -1036,8 +1052,7 @@ public class Gamearena implements EntryPoint {
         updateUsersOnlineTimer.scheduleRepeating(5000); //  задача на обновлнение списка пользователей онлайн
 
         //RootPanel.get("chat").add(testChatBtn);
-        initChatWidget();
-        chatUpdate.scheduleRepeating(1000);
+
 
 
     }
