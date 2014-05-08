@@ -7,7 +7,6 @@
     <inherits name="com.google.gwt.json.JSON"/>
 
     <entry-point class='client.Gamearena'/>
-    <servlet path="/getUsersOnlineService" class="server.services.getUsersOnlineServiceImpl"/>
     <servlet path="/AuthorizationService" class="server.services.authorization.AuthorizationServiceImpl"/>
     <servlet path="/GameService" class="server.services.game.GameServiceImpl"/>
     <servlet path="/ChatService" class="server.services.chat.ChatServiceImpl"/>

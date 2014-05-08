@@ -32,7 +32,7 @@ public interface GameService extends RemoteService {
      * @param myAccount
      * @return идентификатор игры
      */
-    Integer createGame(String myAccount);
+    int createGame(String myAccount);
 
     /**
      * Функция получения с ссервера списка созданных игр
@@ -63,9 +63,7 @@ public interface GameService extends RemoteService {
      */
     String waitForOpponent(int gameId);
 
-    GameXO_WinState writeGameStateService(Integer gemId, String myAccount, GameXO_State newState);
-
-    String altGetUsersOnlineService(String myAccount);
+    GameXO_WinState writeGameState(int gameId, String myAccount, GameXO_State newState);
 
     /**
      * Utility/Convenience class.

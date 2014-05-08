@@ -5,10 +5,7 @@
 <web-app>
   <display-name>Game Arena</display-name>
 
-    <servlet>
-        <servlet-name>getUsersOnlineService</servlet-name>
-        <servlet-class>server.services.getUsersOnlineServiceImpl</servlet-class>
-    </servlet>
+
     <servlet>
         <servlet-name>AuthorizationService</servlet-name>
         <servlet-class>server.services.authorization.AuthorizationServiceImpl</servlet-class>
@@ -18,14 +15,10 @@
         <servlet-class>server.services.game.GameServiceImpl</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>Gamearena ChatService</servlet-name>
+        <servlet-name>ChatService</servlet-name>
         <servlet-class>server.services.chat.ChatServiceImpl</servlet-class>
     </servlet>
 
-    <servlet-mapping>
-        <servlet-name>getUsersOnlineService</servlet-name>
-        <url-pattern>/Gamearena/getUsersOnlineService</url-pattern>
-    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>AuthorizationService</servlet-name>
         <url-pattern>/Gamearena/AuthorizationService</url-pattern>
@@ -35,7 +28,7 @@
         <url-pattern>/Gamearena/GameService</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>Gamearena ChatService</servlet-name>
+        <servlet-name>ChatService</servlet-name>
         <url-pattern>/Gamearena/ChatService</url-pattern>
     </servlet-mapping>
 

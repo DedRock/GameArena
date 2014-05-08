@@ -65,7 +65,12 @@ public interface GameServiceAsync {
      */
     void waitForOpponent(int gameId, AsyncCallback<String> async);
 
-    void writeGameStateService(Integer gemId, String myAccount, GameXO_State newState, AsyncCallback<GameXO_WinState> async);
+    void writeGameState(int gemId, String myAccount, GameXO_State newState, AsyncCallback<GameXO_WinState> async);
 
-    void altGetUsersOnlineService(String myAccount, AsyncCallback<String> async);
+    /**
+     * Функция воздания новой игры
+     *
+     * @param myAccount
+     * @return идентификатор игры
+     */
 }

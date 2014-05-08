@@ -4,7 +4,7 @@
 	<groupId>com.afrikanov</groupId>
 	<artifactId>gamearena</artifactId>
 	<packaging>war</packaging>
-	<version>1.0-SNAPSHOT</version>
+	<version>1</version>
 	<name>gamearena Maven Webapp</name>
 	<url>http://maven.apache.org</url>
 
@@ -41,7 +41,6 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>gwt-maven-plugin</artifactId>
@@ -53,6 +52,17 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat6-maven-plugin</artifactId>
+                <version>2.0</version>
+                <configuration>
+                    <url>http://localhost:8080/manager</url>
+                    <path>/gamearena</path>
+                    <update>true</update>
+                    <server>TomcatServer</server>
+                </configuration>
             </plugin>
         </plugins>
 

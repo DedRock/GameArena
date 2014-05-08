@@ -24,5 +24,5 @@ public interface ChatServiceAsync {
      *
      * @return String = JSON-object with array of messages
      */
-    void getNewMassages(Long lastMsgIndex, AsyncCallback<String> async);
+    void getNewMassages(long lastMsgIndex, AsyncCallback<String> async);
 }

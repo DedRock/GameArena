@@ -22,18 +22,24 @@ public interface ChatService extends RemoteService {
     void sendNewMesage(String myAccount, String message);
 
     /**
-     * Function to receive new messages from server
+     * receive new messages from server
      * @param lastMsgIndex - ID последнего  считанного сообщения
      * @return String = JSON-object with array of messages
      * Struct of JSON-answer:
      *  {
      *      "messages":
      *      [
-     *          {"sender" : :"<></>"}
+     *          {
+     *              "id" : <String>,
+     *              "sender" : <String>,
+     *              "text" : <String>,
+     *              "time" : <String>
+     *          }
+     *          , ...
      *      ]
      *
      */
-    String getNewMassages(Long lastMsgIndex);
+    String getNewMassages(long lastMsgIndex);
 
     /**
      * Function to receive new messages from server

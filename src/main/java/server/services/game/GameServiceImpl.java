@@ -1,6 +1,5 @@
 package server.services.game;
 
-import client.MySQLServerConnParams;
 import client.game.GameType;
 import client.game.SimpleGameInfo;
 import client.game.xo.CellState;
@@ -8,6 +7,8 @@ import client.game.xo.GameXO_State;
 import client.game.xo.GameXO_WinState;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import client.services.game.GameService;
+import server.mysql.DbConnectorSingleton;
+import server.mysql.SqlErrorPrinter;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -20,74 +21,56 @@ import java.util.List;
  * Time: 11:55
  * To change this template use File | Settings | File Templates.
  */
-public class GameServiceImpl extends RemoteServiceServlet implements GameService, MySQLServerConnParams {
+public class GameServiceImpl extends RemoteServiceServlet implements GameService {
+
+    ResultSet resultSet;
+
     @Override
     public boolean closeGame(int gameId, String myAccount) {
         boolean result = false;
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection dbh = DriverManager.getConnection(url, dbUsername, dbPassword);
-            Statement sqlQuery = dbh.createStatement();
 
-            ResultSet resultSet = sqlQuery.executeQuery("SELECT * FROM games WHERE id='" + gameId + "'");
+            resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT * FROM games WHERE id='" + gameId + "'");
             if (resultSet.next()){
                 System.out.println("Запросили информацию об игре #" + gameId);
-                String player_1, player_2, opponent;
-                boolean gameEnd;
-                player_1 = resultSet.getString("player_1");
-                player_2 = resultSet.getString("player_2");
-                gameEnd = resultSet.getBoolean("gameEnd");
-                System.out.println("Player_1 = " + player_1);
-                System.out.println("Player_2 = " + player_2);
+                String player1 = resultSet.getString("player_1");
+                String player2 = resultSet.getString("player_2");
+                boolean gameEnd = resultSet.getBoolean("gameEnd");
 
                 // Игра создана, но не начата
-                if (myAccount.equals(player_1) && (player_2.equals(""))){
-                    sqlQuery.execute("DELETE games FROM games WHERE id=" + gameId);
+                if (myAccount.equals(player1) && (player2.isEmpty())){
+                    DbConnectorSingleton.getInstance().execute("DELETE games FROM games WHERE id=" + gameId);
                     return true;
                 }
 
                 // Если игра идёт
-                if (!player_1.equals("") && !player_2.equals("") && !gameEnd ){
+                if (!player1.isEmpty() && !player2.isEmpty() && !gameEnd ){
 
                     // Определяем оппонента - он выиграет, еслии мы выйдем
-                    if (myAccount.equals(player_1))
-                        opponent = player_2;
-                    else
-                        opponent = player_1;
-
-                    System.out.println("Opponent = " + opponent + " wins, because you are exit !!!");
-                    sqlQuery.execute("UPDATE games SET gameEnd=TRUE, gameTerminated=TRUE, winPlayer='" + opponent + "' WHERE id=" + gameId);
+                    String opponent = myAccount.equals(player1) ? player2 : player1;
+                    DbConnectorSingleton.getInstance().execute("UPDATE games SET gameEnd=TRUE, gameTerminated=TRUE, winPlayer='" + opponent + "' WHERE id=" + gameId);
+                    DbConnectorSingleton.getInstance().commit();
                 }   return true;
-
             }
-            dbh.close();
         } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            SqlErrorPrinter.print(e.getMessage());
+            DbConnectorSingleton.getInstance().rollback();
         }
         return result;
     }
     @Override
-    public Integer createGame(String myAccount) {
-        Integer result = null;
+    public int createGame(String myAccount) {
+        int result = -1;
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection dbh = DriverManager.getConnection(url, dbUsername, dbPassword);
-            Statement sqlQuery = dbh.createStatement();
-
             // Вставим новую запись в БД
-            sqlQuery.execute("INSERT games (player_1, player_2, gameEnd, winPlayer, gameType) VALUES ('"+ myAccount +"', '', false, '', 'XO')");
-            ResultSet resultSet = sqlQuery.executeQuery("SELECT id FROM games WHERE player_1 = '" + myAccount + "' AND player_2 = '' AND gameEnd = false AND gameType='XO'");
+            DbConnectorSingleton.getInstance().execute("INSERT games (player_1, player_2, gameEnd, winPlayer, gameType) VALUES ('" + myAccount + "', '', false, '', 'XO')");
+            resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT id FROM games WHERE player_1 = '" + myAccount + "' AND player_2 = '' AND gameEnd = false AND gameType='XO'");
             if ( resultSet.next() )
                 result = Integer.parseInt(resultSet.getString("id"));
-            dbh.close();
         } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            SqlErrorPrinter.print(e.getMessage());
         }
         return result;
     }
@@ -96,52 +79,32 @@ public class GameServiceImpl extends RemoteServiceServlet implements GameService
         List<SimpleGameInfo> result = new ArrayList<SimpleGameInfo>();
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection dbh = DriverManager.getConnection(url, dbUsername, dbPassword);
-            Statement sqlQuery = dbh.createStatement();
-
             // Выбираем из таблицы "Games" незавершённые игры у которых зарегистрирован только один игрок - это открытые игры
-            ResultSet queryResult = sqlQuery.executeQuery("SELECT id, player_1, player_2, gameType FROM games WHERE gameEnd=false");
-            while (queryResult.next()){
-                result.add( new SimpleGameInfo(queryResult.getInt("id"), queryResult.getString("player_1"), queryResult.getString("player_2"), GameType.valueOf(queryResult.getString("gameType"))) );
+            resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT id, player_1, player_2, gameType FROM games WHERE gameEnd=false");
+            while (resultSet.next()){
+                result.add( new SimpleGameInfo(resultSet.getInt("id"), resultSet.getString("player_1"), resultSet.getString("player_2"), GameType.valueOf(resultSet.getString("gameType"))) );
             }
-            dbh.close();
         } catch (SQLException e) {
-            //System.out.println("SQL Exception");
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            SqlErrorPrinter.print(e.getMessage());
         }
-
-
-
         return result;
     }
     @Override
     public boolean joinToOpenGame(int gameId, String myAccount) {
-        System.out.println("Server join operation call...");
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection dbh = DriverManager.getConnection(url, dbUsername, dbPassword);
-            Statement sqlQuery = dbh.createStatement();
-
             // Проверим, не успел ли кно-ye.elm уже добавитсья
-            ResultSet resultSet = sqlQuery.executeQuery("SELECT player_2 FROM games WHERE id=" + gameId);
+            resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT player_2 FROM games WHERE id=" + gameId);
             if (resultSet.next())
                 // Если место вакантно
-                if (resultSet.getString("player_2").equals("")){
+                if (resultSet.getString("player_2").isEmpty()){
                     // Добавим в таблицу games к записи с "id" = gameId себя как "player_2"
-                    sqlQuery.execute("UPDATE games SET player_2='" + myAccount + "' WHERE id=" + gameId);
-
-                    // если всё прошло успешно
+                    DbConnectorSingleton.getInstance().execute("UPDATE games SET player_2='" + myAccount + "' WHERE id=" + gameId);
+                    DbConnectorSingleton.getInstance().commit();
                     return true;
                 }
-            dbh.close();
         } catch (SQLException e) {
-            //System.out.println("SQL Exception");
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            SqlErrorPrinter.print(e.getMessage());
+            DbConnectorSingleton.getInstance().rollback();
         }
         return false;
     }
@@ -150,20 +113,16 @@ public class GameServiceImpl extends RemoteServiceServlet implements GameService
         GameXO_State result = null;
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection dbh = DriverManager.getConnection(url, dbUsername, dbPassword);
-            Statement sqlQuery = dbh.createStatement();
-            ResultSet resultSet;
 
             // Проверяем, не завершена ли игра по техническим причинам
-            resultSet = sqlQuery.executeQuery("SELECT gameTerminated FROM games WHERE id=" + gameId);
+            resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT gameTerminated FROM games WHERE id=" + gameId);
             if (resultSet.next()){
                 result = new GameXO_State(); //
                 if (resultSet.getBoolean("gameTerminated"))
                     result.setGameTerminated(true);
             }
 
-            resultSet = sqlQuery.executeQuery("SELECT * FROM gamestate WHERE id = '" + gameId + "'");
+            resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT * FROM gamestate WHERE id = '" + gameId + "'");
 
             if ( resultSet.next() ){
                 result.setCurPlayer(resultSet.getString("curPlayer"));
@@ -171,11 +130,8 @@ public class GameServiceImpl extends RemoteServiceServlet implements GameService
                     for(int col=0; col<3; col++)
                         result.setCellState(row, col, CellState.parseString(resultSet.getString("State_" + row + col)));
             }
-            dbh.close();
         } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            SqlErrorPrinter.print(e.getMessage());
         }
         return result;
     }
@@ -184,100 +140,66 @@ public class GameServiceImpl extends RemoteServiceServlet implements GameService
         String opponent = null;
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection dbh = DriverManager.getConnection(url, dbUsername, dbPassword);
-            Statement sqlQuery = dbh.createStatement();
-
-            ResultSet resultSet = sqlQuery.executeQuery("SELECT player_1, player_2 FROM games WHERE id=" + gameId);
+            resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT player_1, player_2 FROM games WHERE id=" + gameId);
             if (resultSet.next()){
-                if (!resultSet.getString("player_2").equals("")){
+                if (!resultSet.getString("player_2").isEmpty()){
                     String player_2 = resultSet.getString("player_2");
-                    sqlQuery.execute("INSERT gamestate (id, curPlayer) VALUES ('" + gameId + "', '" + resultSet.getString("player_1") + "')");
+                    DbConnectorSingleton.getInstance().execute("INSERT gamestate (id, curPlayer) VALUES ('" + gameId + "', '" + resultSet.getString("player_1") + "')");
                     opponent = player_2;
                 }
             }
-            dbh.close();
         } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            SqlErrorPrinter.print(e.getMessage());
         }
         return opponent;
     }
     @Override
-    public GameXO_WinState writeGameStateService(Integer gameId, String myAccount, GameXO_State newState) {
+    public GameXO_WinState writeGameState(int gameId, String myAccount, GameXO_State newState) {
         GameXO_WinState result = new GameXO_WinState();
-        Boolean gameOver = false;
-        String curPlayer = new String();
-        String winPlayer = new String();
-        String player_1 = new String();
-        String player_2 = new String();
-
-        String url = "jdbc:mysql://localhost:3306/gamearena";
-        String dbUsername = "root";
-        String dbPassword = "password";
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection dbh = DriverManager.getConnection(url, dbUsername, dbPassword);
-            Statement sqlQuery = dbh.createStatement();
-
             // Определение игроков данной игры
-            ResultSet resultSet = sqlQuery.executeQuery("SELECT player_1, player_2 FROM games WHERE id=" + gameId);
+            resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT player_1, player_2 FROM games WHERE id=" + gameId);
             if (resultSet.next()){
-                player_1 = resultSet.getString("player_1");
-                player_2 = resultSet.getString("player_2");
+                String player1 = resultSet.getString("player_1");
+                String player2 = resultSet.getString("player_2");
 
-                // Проверка окончания игры
-                result.isGameEnds(newState);
-                // Если игра не закончилась - то пережаём ход
-                if (!result.getWin()){
-                    System.out.println("Передача хода");
-                    // Передача хода
-                    if (myAccount.equals(player_1))
-                        curPlayer = player_2;
-                    if (myAccount.equals(player_2))
-                        curPlayer = player_1;
-                    System.out.println("Текущий игрок = " + curPlayer);
+                // Проверка того, что мы точно участвуем в этой игре
+                if (myAccount.equals(player1) || myAccount.equals(player2)){
+
+                    // Проверка окончания игры
+                    result.isGameEnds(newState);
+                    // Если игра не закончилась - то передаём ход
+                    if (!result.getWin()){
+                        String curPlayer;
+                        // Передача хода
+                        curPlayer = myAccount.equals(player1) ? player2 : player1;
+                        //Записать новое состояние игры в БД
+                        DbConnectorSingleton.getInstance().execute("UPDATE gamestate SET curPlayer='" + curPlayer +
+                                "', State_00 = '" + newState.getCellState(0, 0) +
+                                "', State_01 = '" + newState.getCellState(0, 1) +
+                                "', State_02 = '" + newState.getCellState(0, 2) +
+                                "', State_10 = '" + newState.getCellState(1, 0) +
+                                "', State_11 = '" + newState.getCellState(1, 1) +
+                                "', State_12 = '" + newState.getCellState(1, 2) +
+                                "', State_20 = '" + newState.getCellState(2, 0) +
+                                "', State_21 = '" + newState.getCellState(2, 1) +
+                                "', State_22 = '" + newState.getCellState(2, 2) +
+                                "' WHERE id=" + gameId);
+                        DbConnectorSingleton.getInstance().commit();
+                    }
+                    else{
+                        // Записывыем в таблицу games признак окончания игры и победителя
+                        DbConnectorSingleton.getInstance().execute("UPDATE games SET gameEnd=1, winPlayer='" + result.getWinPlayer() + "'");
+                        DbConnectorSingleton.getInstance().commit();
+                    }
                 }
-                else{
-                    // Записывыем в таблицу games признак окончания игры и победителя
-                    sqlQuery.execute("UPDATE games SET gameEnd=1, winPlayer='" + result.getWinPlayer() + "'");
-                }
-
-                //Записать новое состояние игры в БД
-                sqlQuery.execute("UPDATE gamestate SET curPlayer='" + curPlayer +
-                        "', State_00 = '" + newState.getCellState(0,0)  +
-                        "', State_01 = '" + newState.getCellState(0,1)  +
-                        "', State_02 = '" + newState.getCellState(0,2)  +
-                        "', State_10 = '" + newState.getCellState(1,0)  +
-                        "', State_11 = '" + newState.getCellState(1,1)  +
-                        "', State_12 = '" + newState.getCellState(1,2)  +
-                        "', State_20 = '" + newState.getCellState(2,0)  +
-                        "', State_21 = '" + newState.getCellState(2,1)  +
-                        "', State_22 = '" + newState.getCellState(2,2)  +
-                        "' WHERE id=" + gameId);
-
             }
-            dbh.close();
         } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            SqlErrorPrinter.print(e.getMessage());
+            DbConnectorSingleton.getInstance().rollback();
         }
 
         return result;
-    }
-    @Override
-    public String altGetUsersOnlineService(String myAccount) {
-        String result = new String();
-        /*
-        JSONObject jsonResult = new JSONObject();
-        jsonResult.put("number", new JSONNumber(1));
-        jsonResult.put("string", new JSONString("test"));
-
-        result = jsonResult.toString();
-        */
-        return  result;
     }
 }

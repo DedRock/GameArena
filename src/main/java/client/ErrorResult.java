@@ -10,25 +10,32 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  * To change this template use File | Settings | File Templates.
  */
 public class ErrorResult implements IsSerializable {
-    private Boolean error;
-    private String ErrorDescription;
+    private boolean error;
+    private String errorDescription;
 
     public ErrorResult() {
     }
 
     public String getErrorDescription() {
-        return ErrorDescription;
+        return errorDescription;
     }
 
     public void setErrorDescription(String errorDescription) {
-        ErrorDescription = errorDescription;
+        errorDescription = errorDescription;
     }
 
-    public Boolean getError() {
+    public boolean getError() {
         return error;
     }
 
-    public void setError(Boolean error) {
+    public void setError(boolean error) {
         this.error = error;
     }
+
+    public void set(boolean error, String errorDescription){
+        this.error = error;
+        this.errorDescription =  errorDescription;
+
+    }
+
 }

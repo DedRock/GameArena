@@ -13,8 +13,6 @@ import client.services.chat.ChatService;
 import client.services.chat.ChatServiceAsync;
 import client.services.game.GameService;
 import client.services.game.GameServiceAsync;
-import client.services.getUsersOnlineService;
-import client.services.getUsersOnlineServiceAsync;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -28,29 +26,20 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 
-
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Afrikanov
- * Date: 21.03.14
- * Time: 17:46
- * To change this template use File | Settings | File Templates.
- */
 public class Gamearena implements EntryPoint {
     //===== user info =============================
-    Boolean isLogin = false;
+    Boolean isLogin;
 
 
     //Label usersOnlineLabel = new Label();
     ArrayList<Person> usersOnline = new ArrayList<Person>();
     Long lastReadChatMsgIndex = 0L;
 
-    String myAccount = new String();
+    String myAccount;
 
 
 
@@ -59,7 +48,7 @@ public class Gamearena implements EntryPoint {
     Integer gameId; // идентификатор текущей игры
     boolean myAction; // признак своего хода в течении игры
     boolean iAmFirstPlayer; // player_1 = X, player_2 = O
-    String gameOpponentAccount = new String();
+    String gameOpponentAccount;
     boolean gameOver = false;
     GameXO_State curGameXOState = new GameXO_State();
 
@@ -104,7 +93,6 @@ public class Gamearena implements EntryPoint {
     //===== User Statistic Info =======================================================================================
     private VerticalPanel userStatsPanel = new VerticalPanel();
     private Button closeUserStatsPanelBtn = new Button("Close stats");
-    private FlexTable userStatisticTable = new FlexTable();
 
     //===== GameBoard ============================================================================================
     private VerticalPanel gameboardPanel =  new VerticalPanel();
@@ -127,21 +115,11 @@ public class Gamearena implements EntryPoint {
 
     //===== Chat =============
     VerticalPanel chatPanel = new VerticalPanel();
-    Button testChatBtn = new Button("Test");
     Button sendChatMessageBtn = new Button("Send");
     TextBox chatNewMassageText = new TextBox();
     HorizontalPanel sendNewMessagePanel = new HorizontalPanel();
     VerticalPanel chatMуssages = new VerticalPanel();
     ScrollPanel chatMуssagesScroll = new CustomScrollPanel();
-    Timestamp lastReceivedMessage = new Timestamp(0);
-
-
-
-
-
-
-
-
 
     //############################################################################################################
     //##### INIT WIDGETS FUNCTIONS ###############################################################################
@@ -308,7 +286,6 @@ public class Gamearena implements EntryPoint {
     }
 
     void showUserStatsPanel(String userAccount){
-        System.out.println("showUserStatsPanel");
         userStatsPanel.clear();
         userStatsPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
         userStatsPanel.setWidth("100%");
@@ -439,10 +416,6 @@ public class Gamearena implements EntryPoint {
                 return;
             }
 
-            // Возможная проверка формата введённых данных
-            //if ( !accountTB.getText().matches("^[0-9a-zA-Z\\.]{1,10}$"))
-            //     System.out.println("Имя аккаунта содержит недопустимые символы");
-
             // Проверка на соответствие TextBox-ов "пароль" и "подтверждение пароля"
             if ( !passTB.getText().equals(confirmPassTB.getText())){
                 passTB.addStyleName("errorHighLight");
@@ -467,7 +440,6 @@ public class Gamearena implements EntryPoint {
 
             // Больше мы ходить не можем
             myAction = false;
-            System.out.println("Передали ход сопернику");
             gameSystemMessage.setText("...");
             // Отрисуем изменения на игровом поле
             updateGameboard(curGameXOState);
@@ -593,7 +565,6 @@ public class Gamearena implements EntryPoint {
         public void onFailure(Throwable caught) { Window.alert("RPC readGameStateService ERROR."); }
         @Override
         public void onSuccess(GameXO_State curGameState) {
-            System.out.println("readGameStateServiceCallback");
             if (curGameState != null){
                 // Считали состояние игры с указанным ID
                 curGameXOState = curGameState;
@@ -609,7 +580,6 @@ public class Gamearena implements EntryPoint {
 
                     // Игра завершена по техническим причинам
                     if (curGameState.isGameTerminated()){
-                        System.out.println("Соперник вышел из игры.");
                         gameSystemMessage.setText("Opponent exit from game.Yoг are win !!!");
                         winState.setExitOpponentWin(true);
                         showWinState(winState);
@@ -632,7 +602,6 @@ public class Gamearena implements EntryPoint {
 
             // Если мы случайно попали сюда, игры с указанным id не существует, или она по каким-то причинам удалена из базы данных - то переходим в стартовое игровое меню
             else{
-                System.out.println("Go to lobby from readGameStateServiceCallback");
                 showGameLobby();
             }
         }
@@ -644,7 +613,6 @@ public class Gamearena implements EntryPoint {
         @Override
         public void onSuccess(GameXO_WinState result) {
             if (result.getWin()){
-                System.out.println("Game over");
                 updateGameStateTimer.cancel();
                 showWinState(result);
             }
@@ -660,15 +628,17 @@ public class Gamearena implements EntryPoint {
         public void onFailure(Throwable caught) {Window.alert("createNewGameService error !!!"); }
         @Override
         public void onSuccess(Integer result) {
-            System.out.println("createNewGameServiceCallback");
-            gameId = result;
-            gameCreated = true;
-            gamePlaying = false;
-            iAmFirstPlayer = true;
-            hideGameLobby();
-            initGameboardWidget();
-            showOpenedGameBoard();
-            waitForOpponentTimer.scheduleRepeating(1000);
+            // Если игра создана
+            if (result != -1){
+                gameId = result;
+                gameCreated = true;
+                gamePlaying = false;
+                iAmFirstPlayer = true;
+                hideGameLobby();
+                initGameboardWidget();
+                showOpenedGameBoard();
+                waitForOpponentTimer.scheduleRepeating(1000);
+            }
             createrNewGameLock = false;// сразу на будующее разрешаем создавать новые игры
         }
     };
@@ -681,23 +651,14 @@ public class Gamearena implements EntryPoint {
             openGames.clear();
             for(int i=0; i< result.size(); i++){
 
-
-                System.out.println(result.get(i).getPlayer_1().equals(myAccount));
-                System.out.println(result.get(i).getPlayer_2().equals(null));
-                System.out.println("Player_2 = \"" + result.get(i).getPlayer_2() + "\"");
-                System.out.println((result.get(i).getPlayer_1().equals(myAccount) && !result.get(i).getPlayer_2().equals("")));
                 // Если среди игр есть незаконченная игра с нашим участием
                 if ( (result.get(i).getPlayer_1().equals(myAccount) && !result.get(i).getPlayer_2().equals("")) || result.get(i).getPlayer_2().equals(myAccount)){
-                    System.out.println("Нашли незаконченную игру");
                     gameId = result.get(i).getId();
                     gameIdLabel.setText("Game #" + gameId + " is running.");
                     gameCreated = true;
                     gamePlaying = true;
                     // Определяемся - на какой стороне(X / O) мы играем
-                    if (result.get(i).getPlayer_1().equals(myAccount))
-                        iAmFirstPlayer = true;
-                    else
-                        iAmFirstPlayer = false;
+                    iAmFirstPlayer = result.get(i).getPlayer_1().equals(myAccount);
 
                     hideGameLobby();
                     initGameboardWidget();
@@ -709,7 +670,6 @@ public class Gamearena implements EntryPoint {
 
                 // Если среди открытых игр есть игра, открытая нами
                 if (result.get(i).getPlayer_1().equals(myAccount) && result.get(i).getPlayer_2().equals("")){
-                    System.out.println("Нашли созданную нами игру");
                     gameId = result.get(i).getId();
                     gameCreated = true;
                     gamePlaying = false;
@@ -752,9 +712,7 @@ public class Gamearena implements EntryPoint {
         public void onFailure(Throwable caught) { Window.alert("RPC waitForOpponentServiceCallback ERROR."); }
         @Override
         public void onSuccess(Boolean result) {
-            System.out.println("Result of joining = " + result);
             if (result){
-                System.out.println("Присоединились к игре");
                 // Останавливаем сервис поиска открытых игр
                 updateOpenGamesTimer.cancel();
                 // закрываем игровое меню
@@ -769,8 +727,6 @@ public class Gamearena implements EntryPoint {
                 updateGameStateTimer.run();
                 updateGameStateTimer.scheduleRepeating(1000);
             }
-            else
-                System.out.println("Кто-то нас опередил...");
         }
     };
 
@@ -780,7 +736,6 @@ public class Gamearena implements EntryPoint {
         @Override
         public void onSuccess(Boolean result) {
             if (result){
-                //System.out.println("closeGameServiceCallback");
                 gameId=null;
                 gameOpponentAccount=null;
                 updateGameStateTimer.cancel();
@@ -849,8 +804,7 @@ public class Gamearena implements EntryPoint {
     }
 
     void updateUsersOnlineServiceCall(){
-        getUsersOnlineServiceAsync service = getUsersOnlineService.App.getInstance();
-        service.getUsersOnline(myAccount,updateUsersOnlineServiceCallback);
+        authorizationService.getUsersOnline(myAccount,updateUsersOnlineServiceCallback);
     }
 
     void readGameStateServiceCall(){
@@ -858,7 +812,7 @@ public class Gamearena implements EntryPoint {
     }
 
     void writeGameStateServiceCall(){
-        gameService.writeGameStateService( gameId, myAccount, curGameXOState, writeGameStateServiceCallback);
+        gameService.writeGameState( gameId, myAccount, curGameXOState, writeGameStateServiceCallback);
     }
 
     void createNewGameServiceCall(){
@@ -1030,8 +984,7 @@ public class Gamearena implements EntryPoint {
         chatUpdate.scheduleRepeating(1000);
 
         // Check registration by cookies
-        if ( (myAccount = Cookies.getCookie("user")) != null)
-            isLogin = true;
+        isLogin = (myAccount = Cookies.getCookie("user")) != null;
 
         // Show user-info panel in case of authorization
         if ( isLogin ){
@@ -1050,10 +1003,5 @@ public class Gamearena implements EntryPoint {
         updateUsersOnlineTimer.run();
         // Update users' info on page periodicaly
         updateUsersOnlineTimer.scheduleRepeating(5000); //  задача на обновлнение списка пользователей онлайн
-
-        //RootPanel.get("chat").add(testChatBtn);
-
-
-
     }
 }

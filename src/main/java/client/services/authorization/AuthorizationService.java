@@ -6,6 +6,9 @@ import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import com.google.gwt.core.client.GWT;
 
+
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Afrikanov
@@ -17,7 +20,8 @@ import com.google.gwt.core.client.GWT;
 public interface AuthorizationService extends RemoteService {
 
     ErrorResult checkLogin(String user, String pass);
-    ErrorResult setNewAccount(Person perc);
+    ErrorResult setNewAccount(Person person);
+    List<String> getUsersOnline(String myNickName);
 
     /**
      * Utility/Convenience class.
