@@ -4,7 +4,7 @@ import client.ErrorResult;
 import client.person.Person;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import client.services.authorization.AuthorizationService;
-import server.mysql.DbConnectorSingleton;
+import server.mysql.DbConnectorHolder;
 import server.mysql.SqlErrorPrinter;
 
 import java.sql.*;
@@ -22,20 +22,19 @@ public class AuthorizationServiceImpl extends RemoteServiceServlet implements Au
         ErrorResult result = new ErrorResult();
 
         try{
-
-        qresult = DbConnectorSingleton.getInstance().executeQuery("select * from accounts WHERE nickName=\'"+ user +"\'");
-        // Если найден хоть один результат
-        if ( qresult.first()){
-            if ( qresult.getString("Password").equals(pass)){
-                result.set(false, user);
+            qresult = DbConnectorHolder.getInstance().executeQuery("select * from accounts WHERE nickName=\'"+ user +"\'");
+            // Если найден хоть один результат
+            if ( qresult.first()){
+                if ( qresult.getString("Password").equals(pass)){
+                    result.set(false, user);
+                }
+                else{
+                    result.set(true, "Неверный пароль");
+                }
             }
             else{
-                result.set(true, "Неверный пароль");
+                result.set(true, "Пользователя с таким именем не существует.");
             }
-        }
-        else{
-            result.set(true, "Пользователя с таким именем не существует.");
-        }
 
         } catch (SQLException e ){
             out.println("Ошибка выполнения SQL-запроса: " + e.getMessage());
@@ -51,12 +50,12 @@ public class AuthorizationServiceImpl extends RemoteServiceServlet implements Au
     public ErrorResult setNewAccount(Person person) {
         ErrorResult result = new ErrorResult();
         try {
-            qresult = DbConnectorSingleton.getInstance().executeQuery("select * from accounts WHERE nickName=\'"+ person.getNickName() +"\'");
+            qresult = DbConnectorHolder.getInstance().executeQuery("select * from accounts WHERE nickName=\'"+ person.getNickName() +"\'");
             if ( qresult.first() ){
                 result.set(true, "Пользователь с таким именем уже существует.");
             } else{
                 // Добавление нового аккаунта
-                DbConnectorSingleton.getInstance().execute("INSERT accounts (nickName, Name, LastName, Password) VALUES ('" + person.getNickName() + "', '" + person.getName() + "', '" + person.getLastName() + "', '" + person.getPassword() +  "' )");
+                DbConnectorHolder.getInstance().execute("INSERT accounts (nickName, Name, LastName, Password) VALUES ('" + person.getNickName() + "', '" + person.getName() + "', '" + person.getLastName() + "', '" + person.getPassword() +  "' )");
                 result.set(true, person.getNickName());
             }
         } catch (SQLException e) {
@@ -74,21 +73,21 @@ public class AuthorizationServiceImpl extends RemoteServiceServlet implements Au
         try {
             // First: set own lastEnterTime in table "accounts" to current Time
             Timestamp curTimestamp = new Timestamp(System.currentTimeMillis());
-            DbConnectorSingleton.getInstance().execute("UPDATE accounts SET lastEnterTime = '" + curTimestamp +"' WHERE nickName='" + userNickName + "'");
-            DbConnectorSingleton.getInstance().commit();
+            DbConnectorHolder.getInstance().execute("UPDATE accounts SET lastEnterTime = '" + curTimestamp +"' WHERE nickName='" + userNickName + "'");
+            DbConnectorHolder.getInstance().commit();
 
             // Найти в таблице Accounts всех пользователей, у которых lastEnterTime не меньше чем (текущее время - 5)
             Calendar cal = Calendar.getInstance();
             cal.setTimeInMillis(curTimestamp.getTime());
             cal.add(Calendar.SECOND, deltaSeconds);
             Timestamp onlineUsersTimestamp = new Timestamp(cal.getTime().getTime());
-            qresult = DbConnectorSingleton.getInstance().executeQuery("select nickName from accounts WHERE lastEnterTime >= '" + onlineUsersTimestamp + "'");
+            qresult = DbConnectorHolder.getInstance().executeQuery("select nickName from accounts WHERE lastEnterTime >= '" + onlineUsersTimestamp + "'");
             while (qresult.next()){
                 result.add(qresult.getString("nickName"));
             }
         } catch (SQLException e) {
             SqlErrorPrinter.print(e.getMessage());
-            DbConnectorSingleton.getInstance().rollback();
+            DbConnectorHolder.getInstance().rollback();
         } finally {
             return result;
         }

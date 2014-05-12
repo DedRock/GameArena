@@ -1,6 +1,6 @@
 package server.mysql;
 
-public class DbConnectorSingleton {
+public class DbConnectorHolder {
     static MySqlDbConnector instance;
 
     public static MySqlDbConnector getInstance() {

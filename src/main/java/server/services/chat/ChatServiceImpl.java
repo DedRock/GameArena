@@ -5,7 +5,7 @@ import client.services.chat.ChatService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import server.mysql.DbConnectorSingleton;
+import server.mysql.DbConnectorHolder;
 import server.mysql.SqlErrorPrinter;
 import java.sql.*;
 import java.text.SimpleDateFormat;
@@ -19,12 +19,12 @@ public class ChatServiceImpl extends RemoteServiceServlet implements ChatService
     public void sendNewMesage(String myAccount, String message) {
         System.out.println("Account:" + myAccount + "; Message: " + message);
         try {
-            DbConnectorSingleton.getInstance().execute("INSERT chat (sender, text) VALUES ('" + myAccount +"', '" + message + "')");
-            DbConnectorSingleton.getInstance().commit();
+            DbConnectorHolder.getInstance().execute("INSERT chat (sender, text) VALUES ('" + myAccount +"', '" + message + "')");
+            DbConnectorHolder.getInstance().commit();
 
         } catch (SQLException e) {
             SqlErrorPrinter.print(e.getMessage());
-            DbConnectorSingleton.getInstance().rollback();
+            DbConnectorHolder.getInstance().rollback();
         }
     }
 
@@ -37,20 +37,20 @@ public class ChatServiceImpl extends RemoteServiceServlet implements ChatService
             if (lastReadMsgIndex == 0){
                 // Определям Id последнего сообщения
                 Integer lastMsgIndex = 0;
-                resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT MAX(id) FROM chat");
+                resultSet = DbConnectorHolder.getInstance().executeQuery("SELECT MAX(id) FROM chat");
                 if (resultSet.next()){
                     lastMsgIndex = resultSet.getInt("MAX(id)");
                 }
 
                 // Берём последние 5 сообщение (или все, если их < 5)
                 if (lastMsgIndex >= 5){
-                    resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT * FROM chat WHERE id> (" + lastMsgIndex + "-5);");
+                    resultSet = DbConnectorHolder.getInstance().executeQuery("SELECT * FROM chat WHERE id> (" + lastMsgIndex + "-5);");
                 }else{
-                    resultSet = DbConnectorSingleton.getInstance().executeQuery("SELECT * FROM chat");
+                    resultSet = DbConnectorHolder.getInstance().executeQuery("SELECT * FROM chat");
                 }
 
             }else{ // Возвращяем все записи, с id > lastMsgIndex
-                resultSet = DbConnectorSingleton.getInstance().executeQuery("select * from chat WHERE id > '" + lastReadMsgIndex + "'"); // Messages by last Period
+                resultSet = DbConnectorHolder.getInstance().executeQuery("select * from chat WHERE id > '" + lastReadMsgIndex + "'"); // Messages by last Period
             }
 
             // Формируем JSON-объект для ответа

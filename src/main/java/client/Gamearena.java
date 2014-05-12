@@ -19,6 +19,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
+import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.json.client.*;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Timer;
@@ -26,11 +27,11 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Gamearena implements EntryPoint {
+
     //===== user info =============================
     Boolean isLogin;
 
