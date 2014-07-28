@@ -58,7 +58,7 @@
                 <artifactId>tomcat6-maven-plugin</artifactId>
                 <version>2.0</version>
                 <configuration>
-                    <url>http://localhost:8080/manager</url>
+                    <url>http://localhost:80/manager</url>
                     <path>/gamearena</path>
                     <update>true</update>
                     <server>TomcatServer</server>
